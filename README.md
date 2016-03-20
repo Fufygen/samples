@@ -1,1 +1,1 @@
-"# samples" 
+Code samples from fufygen.eu blog.
