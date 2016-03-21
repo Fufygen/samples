@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 using System;
+using System.Linq;
 using System.Text;
 using Windows.ApplicationModel.Background;
 using Windows.Devices.Pwm;
@@ -8,6 +9,7 @@ using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Diagnostics;
 
 
 // The Background Application template is documented at http://go.microsoft.com/fwlink/?LinkID=533884&clcid=0x409
@@ -16,95 +18,70 @@ namespace SamplePwmConsumer
 {
     public sealed class StartupTask : IBackgroundTask
     {
-        BackgroundTaskDeferral deferral;
-        HttpServer httpServer;
+        private const double PWM_FREQUENCY = 50d;
+        private const double DUTY_CYCLE_PERCENTAGE = 0d;
+        BackgroundTaskDeferral _deferral;
 
-        public void Run(IBackgroundTaskInstance taskInstance)
+        HttpServer _httpServer;
+
+        PinsController _controller;
+
+        PwmPin _pin1;
+        PwmPin _pin2;
+
+        public async void Run(IBackgroundTaskInstance taskInstance)
         {
-            deferral = taskInstance.GetDeferral();
+            _deferral = taskInstance.GetDeferral();
 
-            httpServer = new HttpServer(6000);
-            httpServer.StartServer();
+            _controller = new PinsController();
+            try
+            {
+                bool initialized = await _controller.InitAsync(PWM_FREQUENCY);
+                if (initialized)
+                {
+                    _pin1 = _controller.OpenPin(19);
+                    _pin1.Start();
 
+                    _pin2 = _controller.OpenPin(20);
+                    _pin2.Start();
+                }
+
+                _httpServer = new HttpServer(6000);
+                _httpServer.MessageReceived += HttpServer_MessageReceived;
+                _httpServer.StartServer();
+            }
+            catch (Exception ex)
+            {
+                _deferral.Complete();
+                _deferral = null;
+            }
+        }
+
+        private void HttpServer_MessageReceived(object sender, string message)
+        {
+            switch (message)
+            {
+                case "x":
+                    _pin1.SetActiveDutyCyclePercentage(0.5);
+                    break;
+                case "z":
+                    _pin1.SetActiveDutyCyclePercentage(1.0);
+                    break;
+                default:
+                    _pin1.SetActiveDutyCyclePercentage(0.0);
+                    break;
+            }
         }
 
         ~StartupTask()
         {
-            httpServer.Dispose();
-        }
-    }
-
-    public sealed class HttpServer : IDisposable
-    {
-        private const uint BufferSize = 256;
-        private int port = 8000;
-        private StreamSocketListener listener;
-
-        private PwmPin motorPin;
-        private PwmPin secondMotorPin;
-        private PwmController pwmController;
-        double RestingPulseLegnth = 0;
-
-        public HttpServer(int serverPort)
-        {
-            listener = new StreamSocketListener();
-            listener.Control.KeepAlive = true;
-            listener.Control.NoDelay = true;
-
-            port = serverPort;
-            listener.ConnectionReceived += async (s, e) => { await ProcessRequestAsync(e.Socket); };
-        }
-
-        public async void StartServer()
-        {
-            pwmController = (await PwmController.GetControllersAsync(PwmSoftware.PwmProviderSoftware.GetPwmProvider()))[0];
-            pwmController.SetDesiredFrequency(50);
-            motorPin = pwmController.OpenPin(19);
-            motorPin.SetActiveDutyCyclePercentage(RestingPulseLegnth);
-            motorPin.Start();
-            secondMotorPin = pwmController.OpenPin(20);
-            secondMotorPin.SetActiveDutyCyclePercentage(RestingPulseLegnth);
-            secondMotorPin.Start();
-
-            await listener.BindServiceNameAsync(port.ToString());
-        }
+            _pin1?.Stop();
+            _pin2?.Stop();
 
 
-        public void Dispose()
-        {
-            motorPin.Stop();
-            secondMotorPin.Stop();
-            listener.Dispose();
-        }
-
-        private async Task ProcessRequestAsync(StreamSocket socket)
-        {
-            // this works for text only
-            StringBuilder request = new StringBuilder();
-            byte[] data = new byte[BufferSize];
-            IBuffer buffer = data.AsBuffer();
-            uint dataRead = BufferSize;
-            using (IInputStream input = socket.InputStream)
-            {
-                while (dataRead == BufferSize)
-                {
-                    await input.ReadAsync(buffer, BufferSize, InputStreamOptions.Partial);
-                    string msg = Encoding.UTF8.GetString(data, 0, (int)buffer.Length);
-                    switch (msg)
-                    {
-                        case "x":
-                            motorPin.SetActiveDutyCyclePercentage(0.5);
-                            break;
-                        case "z":
-                            motorPin.SetActiveDutyCyclePercentage(1.0);
-                            break;
-                        default:
-                            motorPin.SetActiveDutyCyclePercentage(0.0);
-                            break;
-                    }
-                    dataRead = buffer.Length;
-                }
-            }
+            _pin1?.Dispose();
+            _pin2?.Dispose();
+            _httpServer?.Dispose();
         }
     }
 }
