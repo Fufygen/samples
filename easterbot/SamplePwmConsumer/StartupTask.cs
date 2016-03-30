@@ -67,10 +67,11 @@ namespace SamplePwmConsumer
 
             }
 
-            _httpServer = new HttpServer(6000);
+            _httpServer = new HttpServer(6000, 250);
             _httpServer.StartServer();
 
             _httpServer.MessageReceived += new EventHandler<byte[]>((s, m) => HandleMessage(m));
+            _httpServer.CommunicationTimedOut += new EventHandler<long>((s, l) => HandleTimeOut(l));
 
         }
 
@@ -82,6 +83,12 @@ namespace SamplePwmConsumer
             _pin3.SetActiveDutyCyclePercentage(0);
             _pin4.SetActiveDutyCyclePercentage(0);
             _pin5.Write(GpioPinValue.Low);
+        }
+
+        private void HandleTimeOut(long ellapsed)
+        {
+            Stop();
+            Debug.WriteLine(String.Format("Next message did not arrived in {0} milliseconds.", ellapsed));
         }
 
         private bool HandleMessage(byte[] bytes)
