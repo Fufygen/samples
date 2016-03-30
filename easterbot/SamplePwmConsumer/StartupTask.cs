@@ -24,7 +24,7 @@ namespace SamplePwmConsumer
         private const double DUTY_CYCLE_PERCENTAGE = 0d;
         BackgroundTaskDeferral _deferral;
 
-        HttpServer _httpServer;
+        UdpServer _httpServer;
 
         PinsController _controller;
 
@@ -67,11 +67,11 @@ namespace SamplePwmConsumer
 
             }
 
-            _httpServer = new HttpServer(6000, 250);
+            _httpServer = new UdpServer(6000, 250);
             _httpServer.StartServer();
 
-            _httpServer.MessageReceived += new EventHandler<byte[]>((s, m) => HandleMessage(m));
-            _httpServer.CommunicationTimedOut += new EventHandler<long>((s, l) => HandleTimeOut(l));
+            _httpServer.MessageReceived += (s, m) => HandleMessage(m);
+            _httpServer.CommunicationTimedOut += (s, l) => HandleTimeOut(l);
 
         }
 

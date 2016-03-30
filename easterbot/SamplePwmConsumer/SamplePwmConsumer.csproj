@@ -96,7 +96,7 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HttpServer.cs" />
+    <Compile Include="UdpServer.cs" />
     <Compile Include="PinsController.cs" />
     <Compile Include="StartupTask.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

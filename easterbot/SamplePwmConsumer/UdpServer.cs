@@ -8,7 +8,7 @@ using System.Diagnostics;
 
 namespace SamplePwmConsumer
 {
-    sealed class HttpServer : IDisposable
+    sealed class UdpServer : IDisposable
     {
         private const uint BUFFER_SIZE = 256;
         private const int TIMER_PERIOD = 250; //250:250; worst case 499, best case 251
@@ -18,7 +18,7 @@ namespace SamplePwmConsumer
         private Timer _timer;
         private long _timeout = 0;
 
-        public HttpServer(int serverPort, long timeout = 0)
+        public UdpServer(int serverPort, long timeout = 0)
         {
             _socket = new DatagramSocket();
             _socket.MessageReceived += Socket_MessageReceived;
