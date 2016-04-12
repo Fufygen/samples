@@ -4,19 +4,14 @@ using System.Linq;
 using System.Text;
 using Windows.ApplicationModel.Background;
 using Windows.Devices.Pwm;
-using Windows.ApplicationModel.AppService;
-using Windows.Networking.Sockets;
-using Windows.Storage.Streams;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Diagnostics;
 using Windows.Devices.Gpio;
-using Windows.UI.Xaml;
 
 
 // The Background Application template is documented at http://go.microsoft.com/fwlink/?LinkID=533884&clcid=0x409
 
-namespace SamplePwmConsumer
+namespace EasterBot
 {
     public sealed class StartupTask : IBackgroundTask
     {
@@ -24,7 +19,7 @@ namespace SamplePwmConsumer
         private const double DUTY_CYCLE_PERCENTAGE = 0d;
         BackgroundTaskDeferral _deferral;
 
-        UdpServer _httpServer;
+        HttpServer _httpServer;
 
         PinsController _controller;
 
@@ -67,11 +62,11 @@ namespace SamplePwmConsumer
 
             }
 
-            _httpServer = new UdpServer(6000, 250);
+            _httpServer = new HttpServer(6000, 250);
             _httpServer.StartServer();
 
-            _httpServer.MessageReceived += (s, m) => HandleMessage(m);
-            _httpServer.CommunicationTimedOut += (s, l) => HandleTimeOut(l);
+            _httpServer.MessageReceived += new EventHandler<byte[]>((s, m) => HandleMessage(m));
+            _httpServer.CommunicationTimedOut += new EventHandler<long>((s, l) => HandleTimeOut(l));
 
         }
 
