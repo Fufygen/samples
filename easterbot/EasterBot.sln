@@ -5,7 +5,7 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasterBot", "EasterBot\EasterBot.csproj", "{7EB72367-F51B-4A1B-A9FA-6A844E8F4874}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PwmSoftware", "..\..\..\rasp\BusProviders\PWM\PwmSoftware\PwmSoftware.vcxproj", "{07864646-FA68-4C58-84CF-9470B0428301}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PwmSoftware", "..\..\..\BusProviders\PWM\PwmSoftware\PwmSoftware.vcxproj", "{07864646-FA68-4C58-84CF-9470B0428301}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
